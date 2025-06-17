@@ -1,0 +1,27 @@
+/my-app                         # Root project directory
+|-- cmd/                        # Main applications for this project
+    |-- my-app/                 # Main application directory
+        |-- main.go            # Entry point of the application
+|-- pkg/                        # Library code that can be used by external applications
+    |-- util/                  # Utility packages
+        |-- util.go           # Common utility functions
+    |-- mymodule/              # Project specific packages
+        |-- mymodule.go       # Module implementation
+|-- internal/                   # Private application and library code
+    |-- config/                # Internal configuration package
+        |-- config.go         # Configuration handling
+    |-- handler/               # Request handlers
+        |-- handler.go        # Handler implementation
+|-- api/                        # API definitions and documentation
+    |-- v1/                    # API version 1
+        |-- api.go            # API endpoints and routes
+|-- scripts/                    # Scripts for development, CI/CD, etc.
+    |-- setup.sh              # Setup script for the project
+|
+|-- configs/                    # Configuration files
+    |-- config.yaml           # YAML configuration file
+|
+|-- .gitignore                 # Git ignore file
+|-- go.mod                     # Go modules definition
+|-- go.sum                     # Go modules checksum
+|-- readme.md                  # Project documentation

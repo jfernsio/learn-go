@@ -1,0 +1,5 @@
+/my-app
+|-- main.go // executable main pkg
+|-- go.mod // module definition
+|-- go.sum // module checksums
+|-- util.go // utilty funcs
