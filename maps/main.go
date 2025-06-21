@@ -1,9 +1,18 @@
 package main
 
 import (
+	// "golang.org/x/tour/wc"
 	"fmt"
+	"strings"
 )
+func wordCounts (s string) map[string]int {
+	words := make(map[string]int)
+	counts := strings.Fields(s)
 
+	for _, word := range counts {
+	return 	words[word]++
+}
+}
 func main() {
 	var m map[string]int //decalres a nil map w string keys and int vals
 	fmt.Println("m:", m)
@@ -48,17 +57,6 @@ func main() {
 	fmt.Println("m0 after clearing:", m0)
 
 	// multideimensonal maps
-	studentGrades := map[string]map[string]int{
-		"Alice": {
-			"Math":    90,
-			"Science": 85,
-		},
-		"Bob": {
-			"Math":    80,
-			"Science": 88,
-		},
-	}
 
-	fmt.Println("Alice's Math grade:", studentGrades["Alice"]["Math"])
-	fmt.Println("Bob's Science grade:", studentGrades["Bob"]["Science"])
+wordCounts("hello hi hello")
 }
