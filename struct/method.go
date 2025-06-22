@@ -20,8 +20,8 @@ func (c Car) DisplayDetails() {
 // The method can be called using the dot operator.
 
 //--> pointer reciver
-func (c *Car) UpdateName(newName string) {
-    c.Name = newName
+func (c *Car) UpdateName(newBramd string) {
+    c.Brand = newBramd
 }	
 
 // Method to check operational status
