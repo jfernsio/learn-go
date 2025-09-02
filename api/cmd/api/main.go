@@ -1,12 +1,14 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/jfernsio/learn-go/internal/config"
 )
@@ -27,8 +29,7 @@ func main() {
 		Handler : router,
 	}
 
-	
-	fmt.Printf("Starting server on %s\n", cfg.Addr)
+	slog.Info("Starting server",slog.String("address",cfg.Addr))
 
 	done := make(chan os.Signal,1)
 
@@ -45,5 +46,14 @@ func main() {
 	//wait for shutdown signal
 	<-done
 
-	slog.Printf("Shutting down server on %s\n", cfg.Addr)
+	slog.Info("Shutting down server")
+
+	ctx , cancel := context.WithTimeout(context.Background(),5*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		slog.Error("failed to shutdown server",slog.String("error",err.Error()))
+	}
+
+	slog.Info("server shutdown gracefully")
 }
