@@ -15,17 +15,28 @@ type Account struct {
 	Balance float64
 }
 
-var accounts []Account
+var accounts []*Account //--> making slice of pointers to Account struct
 
 func printAccounts() {
+	mu.Lock()
+	defer mu.Unlock()
+	if len(accounts) == 0 {
+		fmt.Println("No accounts available")
+		return
+	}
 	for _, acc := range accounts {
 		fmt.Println(acc)
 	}
 }
 
 func createAccount(id int, owner string, balance float64) *Account {
-	accounts = append(accounts, Account{Id: id, Owner: owner, Balance: balance})
-	return &accounts[len(accounts)-1]
+	mu.Lock()
+	defer mu.Unlock()
+	if balance < 0 {
+		balance = 0
+	}
+	accounts = append(accounts, &Account{Id: id, Owner: owner, Balance: balance})
+	return accounts[len(accounts)-1]
 }
 
 var mu sync.Mutex
@@ -42,6 +53,8 @@ func deposit(acc *Account, amount float64) error {
 }
 
 func withdraw(ac *Account, amount float64) error {
+	mu.Lock()
+	defer mu.Unlock()
 	if amount <= 0 {
 		return fmt.Errorf("withdraw amount must be more than zero")
 	}
@@ -52,23 +65,31 @@ func withdraw(ac *Account, amount float64) error {
 	return nil
 }
 
-func findAccount(id int, accounts []Account) (*Account, error) {
+func findAccount(id int) (*Account, error) {
+	mu.Lock()
+	defer mu.Unlock()
 	if len(accounts) == 0 {
 		return nil, fmt.Errorf("no accounts available")
 	}
-	for i := 0; i < len(accounts); i++ {
-		if accounts[i].Id == id {
-			return &accounts[i], nil
+	for _, acc := range accounts {
+		if acc.Id == id {
+			return acc, nil
 		}
 	}
 	return nil, fmt.Errorf("account not found")
 }
 
 func transfer(from, to *Account, amount float64) error {
-	if err := withdraw(from, amount); err != nil {
-		return err
+	mu.Lock()
+	defer mu.Unlock()
+
+	if from.Balance < amount {
+		return fmt.Errorf("insufficient funds")
 	}
-	return deposit(to, amount)
+	from.Balance -= amount
+	to.Balance += amount
+	return nil
+
 }
 
 func main() {
@@ -80,15 +101,13 @@ func main() {
 
 	//wait for goroutines to finish
 	var wg sync.WaitGroup
-	wg.Add(1000)
-	for i := 0; i < 1000; i++ {
+	wg.Add(10000)
+	for i := 0; i < 10000; i++ {
 		go func() {
 			defer wg.Done()
 			err := deposit(acc, 1)
 			if err != nil {
 				fmt.Println("Error during deposit:", err)
-			} else {
-				fmt.Println("After Deposit:", acc)
 			}
 		}()
 	}
@@ -100,22 +119,48 @@ func main() {
 	} else {
 		fmt.Println("After Withdrawal:", acc2)
 	}
-	foundAcc, err := findAccount(1, accounts)
+	foundAcc, err := findAccount(1)
 	if err != nil {
 		fmt.Println("Error finding account:", err)
 	} else {
 		fmt.Println("Found Account:", *foundAcc)
 	}
 
-	err = transfer(acc, acc2, 1000)
-	if err != nil {
-		fmt.Println("Error during transfer:", err)
-	} else {
-		fmt.Println("After Transfer:")
-		fmt.Println("From Account:", acc)
-		fmt.Println("To Account:", acc2)
+	wg.Add(10)
+	for i := 0; i < 10; i++ {
+		go func() {
+			defer wg.Done()
+			err = transfer(acc, acc2, 100)
+			if err != nil {
+				fmt.Println("Error during transfer of acc1:", err)
+			} else {
+				// fmt.Println("After Transfer Acc1 -> Acc2:")
+				// fmt.Println("From Account:", acc)
+				// fmt.Println("To Account:", acc2)
+			}
+			err2 := transfer(acc2, acc, 50)
+			if err2 != nil {
+				fmt.Println("Error during transfer of acc2:", err2)
+			} else {
+				// fmt.Println("After Transfer Acc2 -> Acc1:")
+				// fmt.Println("From Account:", acc2)
+				// fmt.Println("To Account:", acc)
+			}
+		}()
 	}
+	wg.Wait()
 
 	fmt.Println("All Accounts:")
 	printAccounts()
+	// Calculate total money in system
+	mu.Lock()
+	defer mu.Unlock()
+	total := 0.0
+	for _, acc := range accounts {
+		total += acc.Balance
+	}
+	fmt.Printf("Total money in system: $%.2f\n", total) //13000
+	fmt.Printf("Expected: $%.2f\n", 13000.0)            // 3000 original + 100 deposits of $1
+
+	// 10500
 }
